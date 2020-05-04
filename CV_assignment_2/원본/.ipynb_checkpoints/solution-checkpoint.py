@@ -30,28 +30,24 @@ def RANSACFilter(
     assert isinstance(orient_agreement, float)
     assert isinstance(scale_agreement, float)
     ## START
-    ranint = random.radint(0,len(matched_pairs))
-    
     largest_set = []
     ranint = random.randint(0,len(matched_pairs)-1)
     x1,y2 = matched_pairs[ranint]
     radian1 = keypoints1[x1][3]+keypoints2[y2][3]
     largest_set.append([x1,y2])
-    for i in range(0,10):
+    for i in range(0,100):
         ranint = random.randint(0,len(matched_pairs)-1)
         x,y = matched_pairs[ranint]
         radian = keypoints1[x][3]+keypoints2[y][3]
         diff = radian1 - radian
-        if math.cos(radian-radian1)<math.cos(math.pi/6):
-            largest_set.append([x,y])
-    
-    
-    
-    
-    
+        if math.cos((radian-radian1))<=math.cos(orient_agreement):
+            largest_set.append((x,y))
+
     ## END
     assert isinstance(largest_set, list)
     return largest_set
+
+
 
 def FindBestMatches(descriptors1, descriptors2, threshold):
     """
@@ -75,27 +71,22 @@ def FindBestMatches(descriptors1, descriptors2, threshold):
     ## the following is just a placeholder to show you the output format
     shape1 = descriptors1.shape[0]
     shape2 = descriptors2.shape[0]
-    distances = []
+    match = {}
+    matched_pairs=[]
     for i in range(shape1):
         for j in range(shape2):
-            distances.append(math.acos(sum(descriptors1[i]*descriptors2[j])))
-    distances = np.array(distances)
-    distances = distances.reshape(shape1,shape2)
-    indices1 = np.arange(descriptors1.shape[0])
-    indices2 = np.argmin(distances, axis=1)
-    best_distances = distances[indices1,indices2]
-    distances[indices1, indices2] = np.inf
-    second_best_indices2 = np.argmin(distances[indices1], axis=1)
-    second_best_distances = distances[indices1, second_best_indices2]
-    second_best_distances[second_best_distances == 0] \
-    = np.finfo(np.double).eps
-    ratio = best_distances / second_best_distances
-    mask = ratio < threshold
-    indices1 = indices1[mask]
-    indices2 = indices2[mask]
-    matches = np.column_stack((indices1, indices2))
+            angle = math.acos(np.dot(descriptors1[i],descriptors2[j]))
+            match[angle] = i,j
+        match_list = sorted(match)
+        f_neigh = match_list[0]
+        s_neigh = match_list[1]
+        ratio = f_neigh/s_neigh
+        if ratio <= threshold:
+            key1,key2 = match[f_neigh]
+            matched_pairs.append([key1,key2])
+        match = {}
     ## END
-    return matches
+    return matched_pairs
 
 
 def KeypointProjection(xy_points, h):
@@ -105,7 +96,7 @@ def KeypointProjection(xy_points, h):
     Inputs:
         xy_points: numpy array, (num_points, 2)
         h: numpy array, (3, 3), the homography matrix
-    Outpu4t:
+    Output:
         xy_points_out: numpy array, (num_points, 2), input points in
         the reference frame.
     """
@@ -154,7 +145,6 @@ def RANSACHomography(xy_src, xy_ref, num_iter, tol):
     assert isinstance(h, np.ndarray)
     assert h.shape == (3, 3)
     return h
-
 
 
 def FindBestMatchesRANSAC(

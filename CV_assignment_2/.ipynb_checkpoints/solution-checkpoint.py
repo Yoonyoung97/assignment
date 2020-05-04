@@ -30,8 +30,25 @@ def RANSACFilter(
     assert isinstance(orient_agreement, float)
     assert isinstance(scale_agreement, float)
     ## START
-
-
+    ranint = random.radint(0,len(matched_pairs))
+    
+    largest_set = []
+    ranint = random.randint(0,len(matched_pairs)-1)
+    x1,y2 = matched_pairs[ranint]
+    radian1 = keypoints1[x1][3]+keypoints2[y2][3]
+    largest_set.append([x1,y2])
+    for i in range(0,10):
+        ranint = random.randint(0,len(matched_pairs)-1)
+        x,y = matched_pairs[ranint]
+        radian = keypoints1[x][3]+keypoints2[y][3]
+        diff = radian1 - radian
+        if math.cos(radian-radian1)<math.cos(math.pi/6):
+            largest_set.append([x,y])
+    
+    
+    
+    
+    
     ## END
     assert isinstance(largest_set, list)
     return largest_set
