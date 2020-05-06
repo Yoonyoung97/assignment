@@ -42,6 +42,11 @@ def RANSACFilter(
         diff = radian1 - radian
         if math.cos(radian-radian1)>math.cos(orient_agreement):
             matched_pairs.remove(matched_pairs[ranint])
+    for i in range(0,len(matched_pairs)):
+        x,y = matched_pairs[i]
+        if keypoints1[x][2]/keypoints2[y][2] >=0.5:
+            if keypoints1[x][2]/keypoints2[y][2] <=1.5:
+                largest_set.append([x,y])
     ## END
     return matched_pairs
 
@@ -102,10 +107,21 @@ def KeypointProjection(xy_points, h):
     assert isinstance(h, np.ndarray)
     assert xy_points.shape[1] == 2
     assert h.shape == (3, 3)
-
     # START
-
-    # END
+    temp = []
+    num = xy_points.shape[0]
+    xy_points_out = []
+    for i in range(num):
+        temp.append([xy_points[i][0],xy_points[i][1],1])
+    temp = np.array(temp).T
+    temp = np.dot(h,temp)
+    temp = temp.T
+    for i in range(num):
+        if temp[i][2] != 0:
+            xy_points_out.append([temp[i][0]/temp[i][2],temp[i][1]/temp[i][2]])
+        else :
+            xy_points_out.append([temp[i][0]/1e-10,temp[i][1]/1e-10])
+    xy_points_out = np.array(xy_points_out)
     return xy_points_out
 
 def RANSACHomography(xy_src, xy_ref, num_iter, tol):
@@ -134,11 +150,9 @@ def RANSACHomography(xy_src, xy_ref, num_iter, tol):
     assert isinstance(num_iter, int)
     assert isinstance(tol, (int, float))
     tol = tol*1.0
-
     # START
-
-
-
+    h,mask = cv2.findHomography(xy_src,xy_ref,method=cv2.RANSAC,ransacReprojThreshold=tol,maxIters=num_iter)
+    h = np.array(h)
     # END
     assert isinstance(h, np.ndarray)
     assert h.shape == (3, 3)

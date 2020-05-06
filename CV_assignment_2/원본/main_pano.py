@@ -45,9 +45,9 @@ def create_pano(
 
 
 def main():
-    canvas_height = 600
-    canvas_width = 1000
-    image_list = ['Rainier1', 'Rainier2', 'Rainier3','Rainier4','Rainier5','Rainier6']
+    canvas_height = 2000
+    canvas_width = 2000
+    image_list = ['fountain4','fountain0']
 
     num_iter = 50
     tol = 10
